@@ -3,7 +3,7 @@ package com.example.moviesdemo.data.remote
 data class AllMoviesResponse(
     val dates: Dates? = null,
     val page: Int? = null,
-    val results: List<Result?>? = null,
+    val results: ArrayList<Result?>? = null,
     val total_pages: Int? = null,
     val total_results: Int? = null
 )
