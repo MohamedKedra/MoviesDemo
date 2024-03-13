@@ -1,8 +1,11 @@
 package com.example.moviesdemo.app.di
 
 import android.content.Context
+import androidx.room.Room
 import com.example.moviesdemo.app.utils.ConnectionManager
 import com.example.moviesdemo.app.utils.Constant
+import com.example.moviesdemo.data.local.MovieDao
+import com.example.moviesdemo.data.local.MovieDatabase
 import com.example.moviesdemo.data.remote.MovieService
 import com.example.moviesdemo.data.repository.MovieRepository
 import dagger.Module
@@ -30,7 +33,18 @@ class MovieModule {
 
     @Singleton
     @Provides
-    fun provideRepository(service: MovieService) = MovieRepository(service)
+    fun provideRoomDatabase(@ApplicationContext appContext: Context) =
+        Room.databaseBuilder(appContext, MovieDatabase::class.java, "moviesDB")
+            .allowMainThreadQueries()
+            .build()
+
+    @Singleton
+    @Provides
+    fun provideDao(movieDatabase: MovieDatabase) = movieDatabase.movieDao()
+
+    @Singleton
+    @Provides
+    fun provideRepository(service: MovieService, dao: MovieDao) = MovieRepository(service, dao)
 
     @Singleton
     @Provides

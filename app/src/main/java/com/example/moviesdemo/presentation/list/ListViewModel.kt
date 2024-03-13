@@ -5,6 +5,7 @@ import com.example.moviesdemo.app.base.BaseViewModel
 import com.example.moviesdemo.app.base.LiveDataState
 import com.example.moviesdemo.app.utils.ConnectionManager
 import com.example.moviesdemo.data.remote.AllMoviesResponse
+import com.example.moviesdemo.data.remote.Result
 import com.example.moviesdemo.data.repository.MovieRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -15,7 +16,7 @@ import javax.inject.Inject
 class ListViewModel @Inject constructor(
     private val repository: MovieRepository,
     private val connectionManager: ConnectionManager
-) :BaseViewModel(){
+) : BaseViewModel() {
 
     val popularMoviesListResponse = LiveDataState<AllMoviesResponse>()
 
@@ -23,19 +24,23 @@ class ListViewModel @Inject constructor(
 
         publishLoading(popularMoviesListResponse)
 
-        if (!connectionManager.isNetworkAvailable){
+        if (!connectionManager.isNetworkAvailable) {
             publishNoInternet(popularMoviesListResponse)
             return
         }
 
         viewModelScope.launch {
             val result = repository.getAllPopular()
-            if (result.isSuccessful){
+            if (result.isSuccessful) {
                 delay(1000)
-                publishResult(popularMoviesListResponse,result.body())
-            }else{
-                publishError(popularMoviesListResponse,result.message())
+                publishResult(popularMoviesListResponse, result.body())
+            } else {
+                publishError(popularMoviesListResponse, result.message())
             }
         }
     }
+
+    fun cacheMoviesList(movies: ArrayList<Result>) = repository.cacheMoviesList(movies)
+    fun deleteAll() = repository.deleteAll()
+    fun getCachedMovies() = repository.getCachedMovies()
 }

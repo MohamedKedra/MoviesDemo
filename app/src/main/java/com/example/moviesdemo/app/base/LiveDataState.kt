@@ -56,6 +56,8 @@ class DataState<T> {
     fun getNoInternet(): DataState<T> {
 
         this.dataStatus = DataStatus.NO_INTERNET
+        this.data = null
+        this.error = Throwable(message = "No Internet")
         return this
     }
 

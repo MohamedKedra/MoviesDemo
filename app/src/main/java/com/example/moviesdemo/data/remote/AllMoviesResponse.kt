@@ -1,9 +1,12 @@
 package com.example.moviesdemo.data.remote
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 data class AllMoviesResponse(
     val dates: Dates? = null,
     val page: Int? = null,
-    val results: ArrayList<Result?>? = null,
+    val results: ArrayList<Result>? = null,
     val total_pages: Int? = null,
     val total_results: Int? = null
 )
@@ -13,10 +16,11 @@ data class Dates(
     val minimum: String? = null
 )
 
+@Entity(tableName = "movies")
 data class Result(
     val adult: Boolean? = null,
     val backdrop_path: String? = null,
-    val genre_ids: List<Int?>? = null,
+    @PrimaryKey
     val id: Int? = null,
     val original_language: String? = null,
     val original_title: String? = null,

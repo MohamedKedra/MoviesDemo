@@ -5,11 +5,13 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import com.example.moviesdemo.app.base.DataState
 import com.example.moviesdemo.data.remote.Result
 import com.example.moviesdemo.databinding.FragmentListBinding
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -37,14 +39,26 @@ class ListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel.refreshMovieList()
+        initView()
+        initObservable()
+    }
 
+    private fun initView() {
+        showAppState()
         adapter = MovieAdapter(requireContext()) { movie ->
 
         }
-
-        initObservable()
+//        viewModel.deleteAll()
+        val results = viewModel.getCachedMovies()
+        if (viewModel.getCachedMovies().isNotEmpty()) {
+            showAppState(isLoading = false)
+            adapter.submitList(results)
+            binding.rvMovies.adapter = adapter
+        } else {
+            viewModel.refreshMovieList()
+        }
     }
+
 
     private fun initObservable() {
 
@@ -53,42 +67,59 @@ class ListFragment : Fragment() {
                 when (response.getStatus()) {
 
                     DataState.DataStatus.LOADING -> {
-                        shimmerLoading.startShimmer()
-                        shimmerLoading.isVisible = true
-                        rvMovies.isVisible = false
-                        layoutEmptyOrError.isVisible = false
+                        showAppState()
                     }
 
                     DataState.DataStatus.SUCCESS -> {
-
-                        shimmerLoading.stopShimmer()
-                        shimmerLoading.isVisible = false
-                        rvMovies.isVisible = true
-                        layoutEmptyOrError.isVisible = false
-
-                        adapter.submitList(response.getData()?.results)
-                        rvMovies.adapter = adapter
+                        showAppState(isLoading = false)
+                        val list = response.getData()?.results
+                        if (list != null) {
+                            viewModel.cacheMoviesList(list)
+                            adapter.submitList(response.getData()?.results)
+                            rvMovies.adapter = adapter
+                        } else {
+                            showAppState(
+                                isLoading = false,
+                                isError = true,
+                                errorMsg = "Empty List"
+                            )
+                        }
                     }
 
                     DataState.DataStatus.ERROR -> {
-
-                        shimmerLoading.stopShimmer()
-                        shimmerLoading.isVisible = false
-                        rvMovies.isVisible = false
-                        layoutEmptyOrError.isVisible = true
-                        tvMessage.text = response.getError()?.message
+                        showAppState(
+                            isLoading = false,
+                            isError = true,
+                            errorMsg = response.getError()?.message ?: "Something went wrong"
+                        )
                     }
 
                     DataState.DataStatus.NO_INTERNET -> {
-
-                        shimmerLoading.stopShimmer()
-                        shimmerLoading.isVisible = false
-                        rvMovies.isVisible = false
-                        layoutEmptyOrError.isVisible = true
-                        tvMessage.text = response.getError()?.message
+                        showAppState(
+                            isLoading = false,
+                            isError = true,
+                            errorMsg = "No Internet Connection"
+                        )
                     }
                 }
             }
+        }
+    }
+
+    private fun showAppState(
+        isLoading: Boolean = true,
+        isError: Boolean = false,
+        errorMsg: String = ""
+    ) {
+        binding.apply {
+            shimmerLoading.apply {
+                if (isLoading) startShimmer() else stopShimmer()
+                isVisible = isLoading
+            }
+
+            rvMovies.isVisible = !(isLoading || isError)
+            layoutEmptyOrError.isVisible = isError
+            tvMessage.text = errorMsg
         }
     }
 }
