@@ -8,6 +8,26 @@
     <fragment
         android:id="@+id/ListFragment"
         android:name="com.example.moviesdemo.presentation.list.ListFragment"
-        tools:layout="@layout/fragment_list"/>
+        tools:layout="@layout/fragment_list">
+
+
+        <action
+            android:id="@+id/action_ListFragment_to_DetailsFragment"
+            app:destination="@id/DetailsFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/DetailsFragment"
+        android:name="com.example.moviesdemo.presentation.details.DetailsFragment"
+        tools:layout="@layout/fragment_details">
+
+
+        <argument
+            android:name="result"
+            app:argType="com.example.moviesdemo.data.remote.Result"
+            app:nullable="true" />
+
+    </fragment>
 
 </navigation>
