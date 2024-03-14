@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.moviesdemo.R
 import com.example.moviesdemo.app.utils.Constant
 import com.example.moviesdemo.data.remote.Result
 import com.example.moviesdemo.databinding.ItemMovieBinding
@@ -26,7 +27,8 @@ class MovieAdapter(private val context: Context, val onItemClick: (Result) -> Un
         fun bind(result: Result) {
             with(itemProductLayoutBinding) {
                 result.apply {
-                    Glide.with(context).load(Constant.imageBase.plus(poster_path))
+                    Glide.with(context).load(Constant.imageBase.plus(poster_path)).placeholder(
+                        R.drawable.ic_movie)
                         .into(ivPoster)
                 }
             }

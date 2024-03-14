@@ -5,20 +5,28 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
+import androidx.work.BackoffPolicy
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequest
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
 import com.example.moviesdemo.app.base.DataState
-import com.example.moviesdemo.data.remote.Result
+import com.example.moviesdemo.data.workmanager.MovieWorker
 import com.example.moviesdemo.databinding.FragmentListBinding
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class ListFragment : Fragment() {
 
     lateinit var binding: FragmentListBinding
-    lateinit var adapter: MovieAdapter
+    private lateinit var adapter: MovieAdapter
+    private lateinit var periodicWorkRequest: PeriodicWorkRequest
+    private lateinit var oneTimeWorkRequest: OneTimeWorkRequest
 
     private val viewModel by lazy {
         viewModelProvider[ListViewModel::class.java]
@@ -44,13 +52,38 @@ class ListFragment : Fragment() {
     }
 
     private fun initView() {
-        showAppState()
-        adapter = MovieAdapter(requireContext()) { movie ->
 
+        showAppState()
+
+        adapter = MovieAdapter(requireContext()) { movie ->
+            val action  = ListFragmentDirections.actionListFragmentToDetailsFragment(movie)
+            findNavController().navigate(action)
         }
-//        viewModel.deleteAll()
+
+        periodicWorkRequest =
+            PeriodicWorkRequest.Builder(MovieWorker::class.java, 15, TimeUnit.MINUTES)
+                .addTag("WorkManager ${System.currentTimeMillis()}")
+                .setBackoffCriteria(
+                    BackoffPolicy.LINEAR,
+                    PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS,
+                    TimeUnit.MILLISECONDS
+                )
+                .build()
+
+        WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
+            "Periodic",
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicWorkRequest
+        )
+
+
+
         val results = viewModel.getCachedMovies()
+        println("output ${results.size}")
+
         if (viewModel.getCachedMovies().isNotEmpty()) {
+            println("output db at ${System.currentTimeMillis()}")
+
             showAppState(isLoading = false)
             adapter.submitList(results)
             binding.rvMovies.adapter = adapter

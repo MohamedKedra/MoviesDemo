@@ -33,6 +33,7 @@ class ListViewModel @Inject constructor(
             val result = repository.getAllPopular()
             if (result.isSuccessful) {
                 delay(1000)
+                println("output api at ${System.currentTimeMillis()}")
                 publishResult(popularMoviesListResponse, result.body())
             } else {
                 publishError(popularMoviesListResponse, result.message())
